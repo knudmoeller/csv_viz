@@ -85,6 +85,11 @@
 
 		<script type="text/javascript">
 
+			var filenames = [
+				"simple_search_wwwberlindesenwirtschaftwi_1b0f1d5e41da22ced1cfe09401f5d229_enarbeitslosigkeita6.csv" ,
+				"simple_search_wwwberlindesenwirtschaftwi_df8e2f0e45f4472ea8e9a3fa0426b995_atenbeschaeftigungod.csv" ,
+				"simple_search_wwwberlindesenwirtschaftwirtschaftkonjunkturundstatistikwirtschaftsdatengruendungenod.csv" ,
+			]
 			var csvs = {};
 			var data_path = 'data/';
 
@@ -190,6 +195,21 @@
 
 			$(document).ready(function() {
 
+				$.each(filenames, function(index, value) {
+					$("#file-select").append("<option>" + value + "</option>");
+				});
+
+				// read csv files
+				$.each(filenames, function(index, value) {
+					$.ajax({
+						url: data_path + value ,
+						success: function(data) {
+							csvs[value] = data;
+							$("#file-select").change();
+						}
+					})
+				});
+
 				$("#file-select").change(function() {
 					var filename = $(this).val();
 					var column_headers = getHeaders(csvs[filename]);
@@ -211,31 +231,14 @@
 
 				});
 
-				$.ajax({
-					url: data_path ,
-					success: function(data) {
-
-						// add csv filenames to select
-						var file_select = $("#file-select");
-						var filenames = $(data).find("a:contains('.csv')").text().trim().split(" ");
-						$.each(filenames, function(index, value) {
-							file_select.append("<option>" + value + "</option>");
-						});
-
-						// read csv files
-						$.each(filenames, function(index, value) {
-							$.ajax({
-								url: data_path + value ,
-								success: function(data) {
-									csvs[value] = data;
-									$("#file-select").change();
-								}
-							})
-						});
-
-
-					}
-				});
+				// $.ajax({
+				// 	url: data_path ,
+				// 	success: function(data) {
+				// 		// add csv filenames to select
+				// 		var file_select = $("#file-select");
+				// 		var filenames = $(data).find("a:contains('.csv')").text().trim().split(" ");
+				// 	}
+				// });
 			});
 
 		</script>
