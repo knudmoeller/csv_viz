@@ -1,0 +1,38 @@
+.container {
+    padding-bottom: 40px;
+}
+
+#chart_placeholder {
+    width: 100%;
+    height: 200px;
+    background-color: grey;
+    clear: both;
+}
+
+.section {
+    margin-top: 20px;
+}
+
+.mark__character {
+    color: red;
+}
+
+.column-name {
+}
+
+.column-view {
+    text-align: center;
+    width: 100px;
+}
+
+.column-type {
+    width: 120px;
+}
+
+#x-axis-select {
+    width: 250px;
+}
+
+.control-group {
+    margin-top: 30px;
+}

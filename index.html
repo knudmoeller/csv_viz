@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  	<title>CSV Visualisierung mit C3</title>
+  	<link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  	<link rel="stylesheet" type="text/css" href="lib/c3/c3.css">
+  	<link rel="stylesheet" type="text/css" href="style.css">
+  	<script type="text/javascript" src="lib/jquery-3.1.1.min.js"></script>
+  	<script type="text/javascript" src="lib/d3/d3.js"></script>
+  	<script type="text/javascript" src="lib/c3/c3.js"></script>
+    <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+
+  </head>
+  <body>
+		
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12">
+					<h1 class="page-header">CSV Visualisierung</h1>
+					<div id="chart">
+						<div id="chart_placeholder"/>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<div id="config">
+				    <h2>Config</h2>
+				    <div class="row section">
+				    	<div class="col-md-12">
+				    		<label>Data File</label>
+		    				<select id="file-select">
+		    				</select>
+		    			</div>
+		    		</div>
+						<div class="row section">
+							<div class="col-md-6">
+								<table class="table" id="column_table">
+									<thead>
+										<tr>
+											<th class="column-name">Name</th>
+											<th class="column-view">Anzeigen</th>
+											<th class="column-type">Typ</th>
+										</tr>
+									</thead>
+									<tbody>
+									</tbody>
+								</table>
+							</div>
+							<div class="col-md-6">
+								<form>
+									<div class="checkbox">
+										<label>
+											<input type="checkbox" id="german-numbers"> Deutsche Zahlenformatierung 
+											(<strong>"3<span class="mark__character">.</span>100<span class="mark__character">,</span>32"</strong>)
+										</label>
+									</div>
+									<div class="control-group">
+										<label>X-Achse</label>
+										<select id="x-axis-select">
+										</select>
+									</div>
+									<div class="control-group">
+										<label>Diagramm Typ</label>
+										<select id="chart-type">
+											<option value='line'>Liniendiagramm</option>
+											<option value='bar'>Balkendiagramm</option>
+										</select>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<input class="btn btn-default" type="button" value="Apply" onclick="apply();">
+				</div>
+			</div>
+		</div>
+
+		<script type="text/javascript">
+
+			var csvs = {};
+			var data_path = 'data/';
+
+			var apply = function() {
+				var csvname = $("#file-select").val();
+				var config = updateConfig();
+				redrawChart(csvname, config);
+			}
+
+			var updateConfig = function() {
+				// {
+				// 	keys: {
+				// 		zeit: {
+				// 			label: 'zeit' ,
+				// 			type: 'string'
+				// 		} ,
+				// 		insgesamt: {
+				// 			label: 'insgesamt' ,
+				// 			type: 'number'
+				// 		} , 
+				// 		frauen: {
+				// 			label: 'frauen' ,
+				// 			type: 'number'
+				// 		} , 
+				// 		maenner: {
+				// 			label: 'maenner' ,
+				// 			type: 'number'
+				// 		}
+				// 	} ,
+				//  x_axis: 'zeit' ,
+				// 	german_numbers: true ,
+				// 	chart_type: 'line'
+				// }
+				var config = {};
+				config.keys = {};
+				config.german_numbers = $("#german-numbers").is(':checked');;
+				config.x_axis = $("#x-axis-select").val();
+				config.chart_type = $("#chart-type").val();
+				$.each($("#column_table tbody tr"), function(index, value) {
+					var column_include = false;
+					if (column_include = $(value).find(".column-view input").is(':checked')) {
+						var column_id = $(value).find(".column-name").text();
+						var column_type = $(value).find(".column-type select").val();
+						config.keys[column_id] = {}
+						config.keys[column_id].label = column_id;
+						config.keys[column_id].type = column_type;
+					}
+				});
+				return config;
+			}
+
+			var redrawChart = function(csv_name, config) {
+				d3.csv(data_path + csv_name , 
+					function(d) {
+						var row_mappings = {};
+						$.each(config.keys, function(key, value) {
+							var mapping = d[key];
+							if (config.german_numbers) {
+								mapping = mapping.replace(/\./g, '');
+								mapping = mapping.replace(",",".");
+							}
+							if (value.type == 'number') {
+								mapping = +mapping;
+							}						
+							row_mappings[key] = mapping;
+						});
+						return row_mappings;
+					} , 
+					function(data) {
+
+						data = d3toc3(data, Object.keys(config.keys));
+
+						var chart = c3.generate({
+					    data: {
+				      	rows: data ,
+				      	x: config.x_axis ,
+				      	type: config.chart_type
+					    }
+						});
+
+					}
+				);				
+			}
+
+			var d3toc3 = function(data, keys) {
+				var c3data = [];
+				c3data.push(keys);
+				data.forEach(function(d3row) {
+					var c3row = [];
+					keys.forEach(function(key) {
+						c3row.push(d3row[key]);
+					});
+					c3data.push(c3row);
+				});
+				return c3data;
+			}
+
+			var getHeaders = function(data) {
+				var parsed = d3.csv.parse(data);
+				return $.map(parsed[0], function(value, key) {return key})
+			}
+
+
+			$(document).ready(function() {
+
+				$("#file-select").change(function() {
+					var filename = $(this).val();
+					var column_headers = getHeaders(csvs[filename]);
+
+					var tbody = $("#column_table tbody");
+					var x_axis_select = $("#x-axis-select");
+					tbody.html('');
+					x_axis_select.html('');
+					$.each(column_headers, function(index, value) {
+						tbody.append("<tr> \
+							<td class='column-name'>" + value  + "</td>\
+							<td class='column-view'><input type='checkbox'></td>\
+							<td class='column-type'><select><option value='string'>String</option><option value='number'>Zahl</option></select></td>\
+						</tr>");
+						x_axis_select.append("<option>" + value + "</option>");
+					});
+
+
+
+				});
+
+				$.ajax({
+					url: data_path ,
+					success: function(data) {
+
+						// add csv filenames to select
+						var file_select = $("#file-select");
+						var filenames = $(data).find("a:contains('.csv')").text().trim().split(" ");
+						$.each(filenames, function(index, value) {
+							file_select.append("<option>" + value + "</option>");
+						});
+
+						// read csv files
+						$.each(filenames, function(index, value) {
+							$.ajax({
+								url: data_path + value ,
+								success: function(data) {
+									csvs[value] = data;
+									$("#file-select").change();
+								}
+							})
+						});
+
+
+					}
+				});
+			});
+
+		</script>
+
+  </body>
+</html>
+
+
