@@ -91,7 +91,83 @@
 				"simple_search_wwwberlindesenwirtschaftwirtschaftkonjunkturundstatistikwirtschaftsdatengruendungenod.csv" ,
 			]
 			var csvs = {};
+			var row_index = {};
 			var data_path = 'data/';
+			var configs = {
+				"simple_search_wwwberlindesenwirtschaftwi_1b0f1d5e41da22ced1cfe09401f5d229_enarbeitslosigkeita6.csv": {
+					keys: {
+						zeit: {
+							label: 'zeit' ,
+							type: 'string'
+						} ,
+						insgesamt: {
+							label: 'insgesamt' ,
+							type: 'number'
+						} , 
+						frauen: {
+							label: 'frauen' ,
+							type: 'number'
+						} , 
+						maenner: {
+							label: 'maenner' ,
+							type: 'number'
+						}
+					} ,
+					x_axis: 'zeit' ,
+					german_numbers: true ,
+					chart_type: 'line'					
+				} ,
+				"simple_search_wwwberlindesenwirtschaftwi_df8e2f0e45f4472ea8e9a3fa0426b995_atenbeschaeftigungod.csv": {
+					keys: {
+						jahr: {
+							label: 'jahr' ,
+							type: 'string'
+						} ,
+						erwerbstaetige: {
+							label: 'erwerbstaetige' ,
+							type: 'number'
+						} ,
+						produzierendes: {
+							label: 'produzierendes' ,
+							type: 'number'
+						} ,
+						verarbeitendes: {
+							label: 'verarbeitendes' ,
+							type: 'number'
+						} ,
+						baugewerbe: {
+							label: 'baugewerbe' ,
+							type: 'number'
+						} ,
+						dl: {
+							label: 'dl' ,
+							type: 'number'
+						} ,
+					} ,
+					x_axis: 'jahr' ,
+					german_numbers: true ,
+					chart_type: 'bar'					
+				} ,
+				"simple_search_wwwberlindesenwirtschaftwirtschaftkonjunkturundstatistikwirtschaftsdatengruendungenod.csv": {
+					keys: {
+						jahr: {
+							label: 'jahr' ,
+							type: 'string'
+						} ,
+						gewerbeanmeldungen: {
+							label: 'gewerbeanmeldungen' ,
+							type: 'number'
+						} ,
+						stilllegungen: {
+							label: 'stilllegungen' ,
+							type: 'number'
+						} ,
+					} ,
+					x_axis: 'jahr' ,
+					german_numbers: true ,
+					chart_type: 'line'					
+				}				
+			}
 
 			var apply = function() {
 				var csvname = $("#file-select").val();
@@ -100,30 +176,8 @@
 			}
 
 			var updateConfig = function() {
-				// {
-				// 	keys: {
-				// 		zeit: {
-				// 			label: 'zeit' ,
-				// 			type: 'string'
-				// 		} ,
-				// 		insgesamt: {
-				// 			label: 'insgesamt' ,
-				// 			type: 'number'
-				// 		} , 
-				// 		frauen: {
-				// 			label: 'frauen' ,
-				// 			type: 'number'
-				// 		} , 
-				// 		maenner: {
-				// 			label: 'maenner' ,
-				// 			type: 'number'
-				// 		}
-				// 	} ,
-				//  x_axis: 'zeit' ,
-				// 	german_numbers: true ,
-				// 	chart_type: 'line'
-				// }
 				var config = {};
+				row_index = {};
 				config.keys = {};
 				config.german_numbers = $("#german-numbers").is(':checked');;
 				config.x_axis = $("#x-axis-select").val();
@@ -139,6 +193,20 @@
 					}
 				});
 				return config;
+			}
+
+			var loadConfig = function(config) {
+				$.each(row_index, function(index, row) {
+					console.log(index);
+					if (config.keys[index]) {
+						console.log("exists");
+						row.find(".column-view input").prop('checked', true);
+						row.find(".column-type select").val(config.keys[index].type);
+					}
+				});
+				$("#german-numbers").prop("checked", config.german_numbers);
+				$("#x-axis-select").val(config.x_axis);
+				$("#chart-type").val(config.chart_type);
 			}
 
 			var redrawChart = function(csv_name, config) {
@@ -224,11 +292,13 @@
 							<td class='column-view'><input type='checkbox'></td>\
 							<td class='column-type'><select><option value='string'>String</option><option value='number'>Zahl</option></select></td>\
 						</tr>");
+						var row = tbody.find("tr:last");
+						row_index[value] = $(row[0]);
 						x_axis_select.append("<option>" + value + "</option>");
 					});
-
-
-
+					var chart_config = configs[filename];
+					loadConfig(chart_config);
+					apply();
 				});
 
 				// $.ajax({
